@@ -1,58 +1,89 @@
-#include <CGAL/Exact_predicates_exact_constructions_kernel.h>
+#include <limits>
 #include <iostream>
+#include <iomanip>
+#include <string>
+#include <cmath>
 #include <algorithm>
-typedef CGAL::Exact_predicates_exact_constructions_kernel K;
-typedef K::Point_2 P;
-typedef K::Segment_2 S;
-typedef K::Line_2 L;
-typedef K::Triangle_2 T;
+#include <vector>
 
-void solve(){
-  int m, n;
-  std::cin >> m >> n;
-  std::vector<P> points(m);
-  for (int i = 0; i < m; i++){
-    int x, y;
-    std::cin >> x >> y;
-    points[i] = P(x, y);
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+
+using K = CGAL::Exact_predicates_inexact_constructions_kernel;
+using P = K::Point_2;
+using S = K::Segment_2;
+using L = K::Line_2;
+using T = K::Triangle_2;
+using namespace std;
+
+void testcase() {
+  int m, n; cin >> m >> n;
+  vector<S> legs(m - 1);
+  vector<vector<P>> fragments(n, vector<P>(6));
+  vector<vector<int>> coverages(n + 1, vector<int>(m - 1, 0));
+
+  int x, y; cin >> x >> y;
+  P prev(x, y);
+  for (int i = 0; i < m - 1; i++) {
+    int x, y; cin >> x >> y;
+    P next(x, y);
+    legs[i] = S(prev, next);
+    prev = next;
   }
-  std::vector<std::vector<int>> tr_covers_lg(n)
-  for (int i = 0; i < n; i++){
-    int x1, y1, x2, y2, x3, y3, x4, y4, x5, y5, x6, y6;
-    std::cin >> x1 >> y1 >> x2 >> y2 >> x3 >> y3 >> x4 >> y4 >> x5 >> y5 >> x6 >> y6;
-    L l1 = L(P(x1, y1), P(x2, y2));
-    L l2 = L(P(x3, y3), P(x4, y4));
-    L l3 = L(P(x5, y5), P(x6, y6));
-    auto i1 = CGAL::intersection(l1, l2);
-    auto i2 = CGAL::intersection(l2, l3);
-    auto i3 = CGAL::intersection(l3, l1);
-    const P* v1 = boost::get<P>(&*i1));
-    const P* v2 = boost::get<P>(&*i2));
-    const P* v3 = boost::get<P>(&*i3));
-    T tr = T(*v1, *v2, *v3);
-    std::vector<bool> contains(m, false);
-    for (int i = 0; i < m; i++) if (tr.has_on_bounded_side(points[i])) contains[i] = true;
-    for (int i = 0; i < m - 1; i++) if (contains[i] && contains[i + 1]) tr_covers_leg[n].push_back(i);
+
+  for (int i = 0; i < n; i++) {
+    int x11, y11, x12, y12; cin >> x11 >> y11 >> x12 >> y12; 
+    int x21, y21, x22, y22; cin >> x21 >> y21 >> x22 >> y22; 
+    int x31, y31, x32, y32; cin >> x31 >> y31 >> x32 >> y32;
+    P p1(x11, y11), p2(x12, y12), p3(x21, y21), p4(x22, y22), p5(x31, y31), p6(x32, y32);
+
+    if (CGAL::right_turn(p1, p2, p3))
+      swap(p1, p2);
+    
+    if (CGAL::right_turn(p3, p4, p5))
+      swap(p3, p4);
+    
+    if (CGAL::right_turn(p5, p6, p1))
+      swap(p5, p6);
+
+    fragments[i] = vector<P>({p1, p2, p3, p4, p5, p6});
   }
-  std::vector<int> covered(m, 0);
-  int l = 0, best = n;
-  bool all_covered;
-  for (int v : tr_covers_lg[0]) covered[v]++;
-  for (int r = 1; r < n; r++){
-    all_covered = false;
-    for (int cover : covered)
-      if (cover == 0) all_covered = false;
-    if (all_covered){
-      while (all_covered){
-        best = std::min(best, r - l);
+
+  for (int i = 1; i <= n; i++) {
+    for (int j = 0; j < m - 1; j++) {
+      coverages[i][j] = coverages[i - 1][j] + 1;
+      
+      for (int side = 0; side < 3; side++) {
+        P p1 = fragments[i - 1][side * 2], p2 = fragments[i - 1][side * 2 + 1];
+
+        if (CGAL::right_turn(p1, p2, legs[j].start()) || CGAL::right_turn(p1, p2, legs[j].end()))
+        {
+          coverages[i][j]--;
+          break;
+        }
       }
     }
   }
+
+  int start = 0, end = 1, best = n;
+  while (end <= n && start <= end) {
+    bool covers = true;
+    for (int j = 0; j < m - 1 && covers; j++)
+      covers = (coverages[end][j] - coverages[start][j]) >= 1;
+    if (covers && end - start < best)
+      best = end - start;
+    if (covers)
+      start++;
+    else
+      end++;
+  }
+
+  cout << best << endl;
 }
 
-int main(){
-  std::ios_base::sync_with_stdio(false);
-  std::cin.tie(0);
-  int c; std::cin >> c;
-  while(c--) solve();
+int main() {
+  ios_base::sync_with_stdio(false);
+  int t;
+  cin >> t;
+  for (int i = 0; i < t; ++i)
+    testcase();
 }

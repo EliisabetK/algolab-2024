@@ -1,24 +1,30 @@
-#include <iostream>
-#include <vector>
+#include <bits/stdc++.h>
+using namespace std;
 
-void solve(){
-  int n;
-  std::cin >> n;
-  int ec = 1;
-  int oc = 0;
-  int sum = 0;
-  for (int i = 0; i < n; i++){
-    int num; std::cin >> num;
-    sum += num;
-    if (sum % 2 == 0) ec++;
-    else oc++;
-  }
-  int couples = (oc*(oc-1))/2 + (ec*(ec-1))/2;
-  std::cout << couples << std::endl;
-}
+int main() {
+    int T;
+    cin >> T;
+    while (T--) {
+        int n;
+        cin >> n;
+        vector<int> xs(n);
+        for (int i = 0; i < n; i++) cin >> xs[i];
+        int evens = 1;
+        int odds = 0;
+        int prefix = 0;
+        long long result = 0;
 
-int main(){
-  std::ios_base::sync_with_stdio(false);
-  int t; std::cin >> t;
-  while(t--) solve();
+        for (int x : xs) {
+            prefix += x;
+            if (prefix % 2 == 0) {
+                result += evens;
+                evens++;
+            } else {
+                result += odds;
+                odds++;
+            }
+        }
+
+        cout << result << "\n";
+    }
 }
