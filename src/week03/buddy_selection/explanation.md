@@ -6,5 +6,5 @@ Given n students, each with c characteristics, determine if it is possible to ma
 Approach:
 1. Represent each student’s characteristics as an unordered set.
 2. Iterate through all pairs of students to count shared characteristics.
-3. Build a graph where an edge exists if two students share more than f characteristics.
-4. Compute the maximum matching using Edmonds' algorithm and check if f is optimal (i.e. if > f is not a perfect matching).
+3. Build a graph where an edge exists if two students share MORE than f characteristics.
+4. Compute the maximum matching using Edmonds' algorithm and check if f is optimal (i.e. if NOT n/2 = size of matching).
