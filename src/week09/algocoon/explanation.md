@@ -6,3 +6,7 @@ There is no source or sink, we just want to get the mincut, so we take as refere
 Note: 
 - We need both directions since calculating the flow from 0 to i gives the cost of separating node 0 and the nodes it can reach from node i and the rest of the graph, while i to 0 the opposite.
 - A full O(n^2) comparison (calculating flows between all pairs of nodes) would redundantly evaluate many of the same cuts, as the minimum cut for a subset of the graph depends only on the edges crossing the partition boundary.
+
+1. Just add all the limbs to the graph sized n.
+2. Loop through this shit twice, find flow once from 0 to i, and once from i to 0, store the cheapest.
+3. Min cut = max flow.

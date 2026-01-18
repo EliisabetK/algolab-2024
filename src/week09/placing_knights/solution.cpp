@@ -1,6 +1,9 @@
+///3
+
 #include <bits/stdc++.h>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/push_relabel_max_flow.hpp>
+using namespace std;
 
 typedef boost::adjacency_list_traits<boost::vecS, boost::vecS, boost::directedS> traits;
 typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, boost::no_property,
@@ -29,39 +32,35 @@ class edge_adder {
   }
 };
 
-void solve() {
-  int n; std::cin >> n;
-  auto is_white = [](int i, int j){return (i + j) % 2 == 0;};
-  auto ind = [&](int i, int j){return i*n + j;};
-  graph G(n*n);
-  edge_adder adder(G);
-  const vertex_desc src = boost::add_vertex(G);
-  const vertex_desc tgt = boost::add_vertex(G);
-  std::vector<std::pair<int, int>> dirs = {{1, 2}, {-1, 2}, {1, -2}, {-1, -2}, {2, 1}, {-2, 1}, {2, -1}, {-2, -1}};
-  int pres, tot = 0;
-  for (int i = 0; i < n; i++){
-    for (int j = 0; j < n; j++){
-      std::cin >> pres;
-      if (pres == 0) continue;
-      tot++;
-      if (!is_white(i, j)){
-        adder.add_edge(ind(i, j), tgt, 1);
-        continue;
-      }
-      adder.add_edge(src, ind(i, j), 1);
-      for (auto &dir : dirs){
-        int i_new = i + dir.first;
-        int j_new = j + dir.second;
-        if (i_new >= 0 && i_new < n && j_new >= 0 && j_new < n) adder.add_edge(ind(i, j), ind(i_new, j_new), 1);
+int main(){
+  int T; cin >> T;
+  while(T--){
+    int n;
+    cin >> n;
+    graph G(n*n+2);
+    edge_adder adder(G);
+    const int v_source = n*n;
+    const int v_sink = n*n+1;
+    int total = 0;
+    vector<pair<int,int>> positions = {{-1,-2}, {-1, 2}, {1,-2}, {1, 2}, {-2,-1},{2,-1}, {2, 1}, {-2, 1}};
+    for(int i = 0; i < n; i++){
+      for(int j = 0; j < n; j++){
+        int x; cin >> x;
+        if (x == 0) continue;
+        total++;
+        if((i+j) % 2 != 0){ // connect black squares to sink
+          adder.add_edge(i*n+j, v_sink, 1);
+          continue;
+        }
+        adder.add_edge(v_source, i*n+j, 1); // white squares
+        for(auto& pos : positions){
+          int newI = i + pos.first;
+          int newJ = j + pos.second;
+          if(newI >= 0 && newI < n && newJ >= 0 && newJ < n) adder.add_edge(i*n+j, newI*n+newJ, 1);
+        }
       }
     }
+    long flow = boost::push_relabel_max_flow(G, v_source, v_sink);
+    cout << total - flow << "\n";
   }
-  int flow = boost::push_relabel_max_flow(G, src, tgt);
-  std::cout << tot - flow << '\n';
-}
-
-int main() {
-  std::ios_base::sync_with_stdio(false);
-  int t; std::cin >> t;
-  while(t--) solve();
 }

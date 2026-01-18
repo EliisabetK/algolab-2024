@@ -1,40 +1,35 @@
-#include <iostream>
-#include <algorithm>
-#include <queue>
-#include <climits>
+///1
 
-struct boat_t{int len, pole, first_begin, first_end;};
+#include <bits/stdc++.h>
+using namespace std;
 
-auto comp_boats = [](boat_t b1, boat_t b2){return b1.first_end > b2.first_end;};
+int main() {
+  ios::sync_with_stdio(false);
+  cin.tie(nullptr);
 
-void solve(){
-  int n; std::cin >> n;
-  std::priority_queue<boat_t, std::vector<boat_t>, decltype(comp_boats)> boats(comp_boats);
-  for (int i = 0; i < n; i++){
-    int len, pole; std::cin >> len >> pole;
-    boats.push({len, pole, pole - len, pole});
-  }
-  int count = 0;
-  int prev = INT_MIN;
-  while (!boats.empty()){
-    auto boat = boats.top();
-    boats.pop();
-    if (prev <= boat.first_begin){
+  int T; cin >> T;
+  while (T--) {
+    int n; cin >> n;
+    vector<pair<int, int>> boats(n);
+    for (int i = 0; i < n; i++) {
+      int l, p;
+      cin >> l >> p;
+      boats[i] = {p, l};
+    }
+
+    sort(boats.begin(), boats.end());
+    int count = 1;
+    int endpoint = boats[0].first; // current endpoint position
+    for (int i = 1; i < n;) {
+      int next = 1000000000; // large starting value for the position
+      // move forward as long as boat i overlaps with the endpoint
+      while (i < n && next > boats[i].first) {
+        next = min(next, max(endpoint + boats[i].second, boats[i].first));
+        i++;
+      }
+      endpoint = next;
       count++;
-      prev = boat.first_end;
     }
-    else if (prev <= boat.pole){
-      boat.first_begin = prev;
-      boat.first_end = prev + boat.len;
-      boats.push(boat);
-    }
+    cout << count << "\n";
   }
-  std::cout << count << std::endl;
-}
-
-int main(){
-  std::ios_base::sync_with_stdio(false);
-  std::cin.tie(NULL);
-  int t; std::cin >> t;
-  while(t--) solve();
 }

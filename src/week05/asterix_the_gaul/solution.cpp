@@ -1,80 +1,87 @@
-#include <limits>
-#include <iostream>
-#include <iomanip>
-#include <string>
-#include <cmath>
-#include <algorithm>
-#include <vector>
+///4
+using namespace std;
+#include<bits/stdc++.h>
 
-struct move {long d, t;};
-
-auto comp_move = [](move m1, move m2){
-  return m1.t > m2.t;
+struct Subset{
+  long long d, t;
+  int count;
 };
 
-bool subset_sum(int beg, int end, std::vector<move> &moves, std::vector<move> &result, long D, long T){
-  for (int i = 0; i < (1 << (end - beg)); i++){
-    long sum_d = 0, sum_t = 0;
-    for (int j = 0; j < (end - beg); j++){
-      if (i & (1 << j)){
-        sum_d += moves[j + beg].d;
-        sum_t += moves[j + beg].t;
-      }
-    }
-    if (sum_t < T){
-      if (sum_d >= D) return true;
-      result.push_back({sum_d, sum_t});
-    }
-  }
-  return false;
-}
-
-bool split_and_list(int n, std::vector<move> &moves, long D, long T){
-  std::vector<move> res_one;
-  std::vector<move> res_two;
-  if (subset_sum(0, n/2, moves, res_one, D, T)) return true;
-  if (subset_sum(n/2, n, moves, res_two, D, T)) return true; //+1?
-  std::sort(res_two.begin(), res_two.end(), comp_move);
-  for (int i = int(res_two.size()) - 2; i >= 0; i--) res_two[i].d = std::max(res_two[i + 1].d, res_two[i].d); //other dir
-  for (move m : res_one){
-    move key = {D - m.d, T - m.t};
-    auto upper = std::upper_bound(res_two.begin(), res_two.end(), key, comp_move); 
-    if (upper != res_two.end() && (upper->d + m.d) >= D) return true; //end D condition
-  }
-  return false;
-}
-
-void solve(){
-  int n, m;
-  long D, T;
-  std::cin >> n >> m >> D >> T;
-  std::vector<move> moves(n);
-  std::vector<long> sips(m);
-  for (int i = 0; i < n; i++){
-    long d, t;
-    std::cin >> d >> t;
-    moves[i] = {d, t};
-  }
-  for (int i = 0; i < m; i++) std::cin >> sips[i];
-
-  if (split_and_list(n, moves, D, T)){
-    std::cout << 0 << '\n';
+void generate_subsets(int i, int end, const vector<pair<long long,long long>>& movements, 
+long long current_dist, long long current_time, long long current_count, vector<Subset>& subsets){
+  if(i == end){
+    subsets.push_back({current_dist, current_time, current_count});
     return;
   }
-  int left = 0, right = m - 1;
-  while(left <= right){
-    int mid = left + (right - left)/2;
-    for (int i = 0; i < n; i++) moves[i].d += sips[mid];
-    if (split_and_list(n, moves, D, T)) right = mid - 1;
-    else left = mid + 1;
-    for (int i = 0; i < n; i++) moves[i].d -= sips[mid];
-  }
-  if (left == m) std::cout << "Panoramix captured\n";
-  else std::cout << left + 1 << '\n';
+  generate_subsets(i+1, end, movements, current_dist, current_time, current_count, subsets);
+  generate_subsets(i+1, end, movements, current_dist+movements[i].first, current_time+movements[i].second, current_count+1, subsets);
 }
 
 int main(){
-  std::ios_base::sync_with_stdio(false);
-  int t; std::cin >> t;
-  for (int i = 0; i < t; ++i) solve();
+  ios_base::sync_with_stdio(false);
+  cin.tie(NULL);
+  int test;
+  cin >> test;
+  while(test--){
+    int n,m; long long D,T;
+    cin >> n >> m >> D >> T;
+    vector<pair<long long,long long>> moves(n);
+    for(int i = 0; i < n; i++){
+      cin >> moves[i].first >> moves[i].second;
+    }
+    vector<long long> sips(m);
+    for(int i = 0; i < m; i++) cin >> sips[i];
+    vector<Subset> left, right;
+    generate_subsets(0, n/2, moves, 0,0,0,left);
+    generate_subsets(n/2, n, moves, 0,0,0,right);
+    sort(right.begin(), right.end(), [](Subset a, Subset b) { return a.t < b.t; });
+
+    vector<vector<pair<long long, long long>>> right_by_count(n+1);
+    for(auto& sub : right){
+      right_by_count[sub.count].push_back({sub.t, sub.d});
+    }
+    for(int i = 0; i <= n; i++){
+      if(right_by_count[i].empty()) continue;
+      sort(right_by_count[i].begin(), right_by_count[i].end());
+      long long maxd = -1;
+      for(auto& p : right_by_count[i]){
+        maxd = max(maxd, p.second);
+        p.second = maxd;
+      }
+    }
+    long long min_gulps = -1;
+    for(auto& l : left){
+      if(l.t >= T) continue;
+      long long time_budget = T-1-l.t;
+      for(int r_count = 0; r_count <= (n-n/2); r_count++){
+        auto& group = right_by_count[r_count];
+        if(group.empty()) continue;
+        auto it = upper_bound(group.begin(), group.end(), make_pair(time_budget, (long long) 2e18));
+        if(it != group.begin()){
+          long long maxrd = prev(it)->second;
+          long long total_d = l.d + maxrd;
+          int total_moves = l.count + r_count;
+          long long needed = D - total_d;
+          if(needed <= 0){
+            min_gulps = 0;
+          }
+          else{
+            if(m > 0 && total_moves > 0){
+              long long required = (needed + total_moves -1) / total_moves;
+              auto sip_it = lower_bound(sips.begin(), sips.end(), required);
+              if(sip_it != sips.end()){
+                int gulps = (int) (sip_it - sips.begin()) + 1;
+                if(min_gulps == -1 || gulps < min_gulps){
+                  min_gulps = gulps;
+                }
+              }
+            }
+          }
+        }
+      }
+      if (min_gulps == 0) break;
+    }
+    if(min_gulps == -1) cout << "Panoramix captured" << endl;
+    else cout << min_gulps << endl;
+  }
 }

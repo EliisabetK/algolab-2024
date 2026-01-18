@@ -11,17 +11,21 @@ Approach:
 - Store the moves and the sips, and try to solve(*) it without sips first (if we succed, we stop).
 - Binary search the minimum number of potions that solves the problem (we need to add the potion effect to all the moves, and subtract it after our trial).
 
-*To solve the problem:
-- we split the input in half (split and list)
-- we find all the combinations of moves(**) within the split range having total time less than T (and if greater or equal than D, return true since that solved the problem already)
-- if we didn't find a solution within the two split range, we use binary search (upperbound) to look for them but before this we need to
-	1. Sort the subset2 of moves in decreasing order of time
-	2. Use dominance compression to pre-process the moves so that for each t we have the best d (right to left propagating rightest best distance, since sorted in descending order of time)
-	3. For every move in subset1, define the key, i.e. the minimum value that is satisfactory to solve the problem
-	4. Find the upper bound of the subset2 regarding key, i.e. the highest time taking move so that the condition of time is satisfied
-	5 Check if also the condition of distance is satisfied (if yes, we found a solution)
-
-*To find all the combinations we use bitmasks:
-- we find all the bitmasks for the range end-beg
-- for each bitmask, every element belonging to it gets added (with the offset of the beg index)
-- if such a combination satisfies our constraints of both time and distance, it's a solution, only time it is to be added to the subsums, else we don't care
+1. Read the inputs. Read the moves as pairs and create a subsets vector that holds Subset structs{d,t,count}.
+2. Split the list by making a subsets vector for left and right.
+	3. Using recursion generate all subsets of moves for left and right:
+		* generate_subsets(0, n/2, moves, 0,0,0,left);
+		* generate_subsets(n/2, n, moves, 0,0,0,right);
+	4. Sort the right subsets vector by time.
+5. Create a matrix of pairs to group the right subsets.
+	6. For every subset in the right, group together times and distances by their count.
+	7. Go through the matrix, if a vector of a certain count is empty, skip it. Otherwise sort the right_by_count  i-th array. Make a variable to keep the max distance. Go through every pair in the array and find the max.
+8. Initialize min_gulps to -1 (or a very large number) to track the best solution. 
+9. Iterate through every subset in the left vector: Check if its time l.t is already >= T. If so, skip it. Calculate the remaining time budget: T - 1 - l.t.
+10. For each left subset, iterate through every r_count bucket (0 to n - n/2): 
+	* Use binary search (upper_bound) on right_by_count[r_count] to find the largest distance maxrd that fits within the time budget.
+	* Calculate the total distance (l.d + maxrd) and total movements (l.count + r_count).
+11. Check the Potion Requirement: If total_distance >= D, Astérix needs 0 gulps. Otherwise, calculate the needed boost per movement:boost = ceil((D - total_distance) / total_moves).
+12. Use binary search (lower_bound) on the sorted sips array to find the smallest number of gulps that provides at least this boost. Update min_gulps with the smallest valid number of sips found across all combinations. 
+13. Optimization: If min_gulps reaches 0, break all loops early (you can't do better than 0).
+14. Final Output: After checking all combinations, if min_gulps is still -1, print "Panoramix captured"; otherwise, print the value of min_gulps.

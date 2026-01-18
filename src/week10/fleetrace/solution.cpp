@@ -1,4 +1,5 @@
 ///4
+
 using namespace std;
 #include<bits/stdc++.h>
 
@@ -42,43 +43,26 @@ int main(){
   int T;
   cin >> T;
   while(T--){
-    int N,M,S;
-    cin >> N >> M >> S;
-    
-    graph G(2+N+M+S);
-    edge_adder adder(G);  
-    auto c_map = boost::get(boost::edge_capacity, G);
-    auto r_map = boost::get(boost::edge_reverse, G);
-    auto rc_map = boost::get(boost::edge_residual_capacity, G);
-    
-    const int v_source = 0;
-    const int v_sink = 1+N+M+S;
-    const int buyers_begin = 1;
-    const int sites_begin = 1+N;
-    const int states_begin = 1+N+M;
-    const long long INF = 1000;
-    
-    for(int i = 0; i < S; i++) {
-      int limit; cin >> limit;
-      adder.add_edge(states_begin + i, v_sink, limit, 0);
+    int b,s,p; cin >> b >> s >> p;
+    graph G(2+b+s);
+    edge_adder adder(G);
+    const int v_source = b+s;
+    const int v_sink = b+s+1;
+    for(int i = 0; i < b; i++){
+      adder.add_edge(v_source, i, 1, 0);
+      adder.add_edge(i, v_sink, 1, 5000);
     }
-    
-    for(int i = 0; i < M; i++) {
-      int which_state; cin >> which_state;
-      adder.add_edge(sites_begin + i, which_state + states_begin-1, 1,0);
+    for(int i = 0; i < p; i++){
+      int boat, sailor, spectacle;
+      cin >> boat >> sailor >> spectacle;
+      adder.add_edge(boat, sailor + b, 1, 5000-spectacle);
     }
-    
-    for(int i = 0; i < N; i++){ // source to buyer
-      adder.add_edge(v_source, i + buyers_begin, 1, 0);
-      for(int j = 0; j < M; j++){ // buyer to site
-        int bid; cin >> bid;
-        adder.add_edge(i + buyers_begin, j + sites_begin, 1, INF - bid);
-      }
+    for(int i = 0; i < s; i++){
+       adder.add_edge(i+b, v_sink, 1, 0);
     }
-    
-    int sold = boost::push_relabel_max_flow(G, v_source, v_sink);
+    int flow= boost::push_relabel_max_flow(G, v_source, v_sink);
     boost::successive_shortest_path_nonnegative_weights(G, v_source, v_sink);
-    int profit = INF*sold - boost::find_flow_cost(G);
-    std::cout << sold << ' ' << profit << '\n';
+    int cost = boost::find_flow_cost(G);
+    cout << 5000* flow - cost << endl;
   }
 }
