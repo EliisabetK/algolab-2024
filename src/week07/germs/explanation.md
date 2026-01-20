@@ -13,8 +13,14 @@ Key Observations:
    - Use incident edges to find the minimum distance to neighbouring bacteria.
 
 More detailed procedure:
-1. Read the boundaries of the dish and the coordinates of the bacteria, in order to construct the Delaunay triangulation based on the points.
-2. Iterate through the finite vertices and compute the die_distance with the boundaries.
-3. Use a circulator to circulate the edges at such vertex to calculate the die_distance_squared, i.e. the shortest segment square: t.segment(ec).squared_length()
-4. Find the minimum squared time corresponding to the death of the bacterium: std::min(die_distance - 0.5, sqrt(die_distance_squared)/2 - 0.5)
-5. Translate to time, so take the square root and the ceil. The three solutions at the respective indices: 0, n/2, n-1.
+1. Read the boundaries of the dish and the coordinates of the bacteria, at the same time for each bacteria find the distance to the nearest border and keep that in a vector of death distances (square them also). Save also the index when saving the bacteria positions.
+2. Iterate through the edges and find for each pair of vertices calculate the squared_distance between them and divide by 4 to get the max radius before touching another bacteria. Add it ( for both vertices) to the death distances vector IF it is less than the distance to the border.
+3. Find the minimum time corresponding to the death of the bacterium: sqrt(max(0.0,sqrt(death_distances[i])-0.5)). You need the max 0.0 bit for avoiding it becoming negative.
+5. The three solutions at the respective indices: 0, n/2, n-1.
+
+Tips:
+Not too hard, but annoying to get the syntax correct. Careful with double and long long. 
+Also you need three things to get the vertices: 
+* auto u = e->first->vertex((e->second+1)%3); 
+* int i1 = e->first->vertex((e->second+1)%3)->info(); 
+* auto v1 = u->point();

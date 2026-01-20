@@ -1,51 +1,62 @@
+///1
 #include <bits/stdc++.h>
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Delaunay_triangulation_2.h>
+#include <CGAL/Triangulation_vertex_base_with_info_2.h>
+#include <CGAL/Triangulation_face_base_2.h>
+using namespace std;
 
 typedef CGAL::Exact_predicates_inexact_constructions_kernel K;
-typedef CGAL::Delaunay_triangulation_2<K>  Triangulation;
-typedef Triangulation::Edge_iterator  Edge_iterator;
 typedef K::Point_2 P;
-typedef K::Segment_2 S;
 
-void solve(int n){
-  std::vector<P> points(n);
-  long le, bo, ri, to; std::cin >> le >> bo >> ri >> to;
-  for (int i = 0; i < n; i++){
-    int x, y; std::cin >> x >> y;
-    points[i] = P(x, y);
-  }
-  Triangulation t(points.begin(), points.end());
-  std::vector<double> die_time_sqrd;
-  for (auto v = t.finite_vertices_begin(); v != t.finite_vertices_end(); v++){
-    P p = v->point();
-    double die_dist = std::min({std::abs(p.x() - le), std::abs(p.x() - ri), std::abs(p.y() - bo), std::abs(p.y() - to)});
-    double die_dist_sqrd = std::numeric_limits<long>::max();
-    auto ec = t.incident_edges(v);
-    if (ec != nullptr){
-      do {
-        if (t.is_infinite(ec)) continue;
-        double curr = t.segment(ec).squared_length()/4;
-        die_dist_sqrd = std::min(die_dist_sqrd, curr);
-      } while(++ec != t.incident_edges(v));
-    }
-    die_time_sqrd.push_back(std::min(die_dist - 0.5, std::sqrt(die_dist_sqrd) - 0.5));
-  }
-  std::sort(die_time_sqrd.begin(), die_time_sqrd.end());
-  auto sqrt_and_ceil = [](double t){return std::ceil(std::sqrt(t));};
-  auto t0 = sqrt_and_ceil(die_time_sqrd[0]);
-  auto t1 = sqrt_and_ceil(die_time_sqrd[n/2]);
-  auto t2 = sqrt_and_ceil(die_time_sqrd[n - 1]);
-  std::cout << t0 << ' ' << t1 << ' ' << t2 << '\n';
+typedef CGAL::Triangulation_vertex_base_with_info_2<int, K> Vb;
+typedef CGAL::Triangulation_face_base_2<K> Fb;
+typedef CGAL::Triangulation_data_structure_2<Vb, Fb> Tds;
+typedef CGAL::Delaunay_triangulation_2<K, Tds> Triangulation;
+
+double ceil_to_double(const K::FT& x) {
+  double a = std::ceil(CGAL::to_double(x));
+  while (a < x) a += 1;
+  while (a - 1 >= x) a -= 1;
+  return a;
 }
 
-int main(){
-  std::ios_base::sync_with_stdio(false);
-  std::cin.tie(nullptr);
+int main() {
+  ios::sync_with_stdio(false);
+  cin.tie(nullptr);
+
   int n;
-  std::cin >> n;
-  while (n > 0){
-    solve(n);
-    std::cin >> n;
+  while (cin >> n && n != 0) {
+    long long l,b,r,t; cin >> l >> b >> r >> t;
+    vector<pair<P, int>> bacteria(n);
+    vector<double> death_distances(n);
+    for(int i = 0; i < n; i++){
+      long long x,y; cin >> x >> y;
+      bacteria[i] = {P(x,y), i};
+      death_distances[i] = pow(min(min(y-b, t-y),min(x-l, r-x)),2);
+    }
+    
+    Triangulation T;
+    T.insert(bacteria.begin(), bacteria.end());
+    
+    for (auto e = T.finite_edges_begin(); e != T.finite_edges_end(); ++e) {
+      auto u = e->first->vertex((e->second+1)%3);
+      auto v = e->first->vertex((e->second+2)%3);
+      int i1 = e->first->vertex((e->second+1)%3)->info();
+      int i2 = e->first->vertex((e->second+2)%3)->info();
+      auto v1 = u->point();
+      auto v2 = v->point();
+      double d = CGAL::squared_distance(v1,v2) / 4.0; // max radius before touching another
+      death_distances[i1] = min(death_distances[i1], d);
+      death_distances[i2] = min(death_distances[i2], d);
+    }
+    
+    vector<long long> death_times(n);
+    for(int i = 0; i < n; i++){
+      death_times[i] = (long long) ceil_to_double(sqrt(max(0.0,sqrt(death_distances[i])-0.5)));
+    }
+    
+    sort(death_times.begin(), death_times.end());
+    cout << death_times[0] << " " << death_times[n/2] << " " << death_times[n-1] << endl;
   }
 }

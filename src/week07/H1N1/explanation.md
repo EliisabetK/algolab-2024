@@ -3,16 +3,13 @@ Given a set of n infected people, determine which of other m individuals can esc
 
 Approach:
 1. Create a Delaunay triangulation of the infected people's locations: t.insert(pts.begin(), pts.end())
-2. Enhance the triangulation finite faces with an index for traversal starting from 1 (keeping 0 for infinite): f->info() = num_faces++
-3. Iterate the finite faces and iterate their respective three neighbour faces: auto f2 = f->neighbour(i)
-4. Get the traversal index of the face (if infinite it's zero, symbolising the escape): int v = t.is_infinite(f2) ? 0 : f2->info()
-5. Get the respective two points in common between the two faces:
-- auto p1 = f->vertex((i + 1) % 3)->point();
-- auto p2 = f->vertex((i + 2) % 3)->point();
-6. We calculate the squared distance between the two points and we store for every face, the respective neighbour face with the distance, and we do it also for the infinite face when we found them.
-7. Perform a BFS on the triangulation:
-   - Start from the infinite face with infinite as infection distance.
-   - Traverse adjacent faces while maintaining the minimum infection distance in a bottleneck vector.
-8. For each person, check:
-   - The squared distance to the nearest infected person.
-   - If this sufficient, we locate the point to the respective face their location is in a face with sufficient distance (4d since squared).
+2. For every face (node) find the widest possible escape path. Each shared edge is a gate with weight = width. Path capacity is the minimum edge weight on the path, we need the maximum of this minimum (maximum bottleneck).
+3. We make a priority queue with a pair of double and face_handle. We iterate through the faces of the triangulation. We check if the face is infinite and if it is, we set its info field as INF and push  {INF, f} to the priority queue. Else we mark f-> info() as -1 to make it unvisited.
+4. We perform DFS:
+   * Get the top of the queue and pop the queue. Get the value and the face from the top.
+   * If value is smaller than the value of the face, continue.
+   * Else iterate through the 3 neighbour faces of the face. If the current neightbours value is greater or equal to the current value, continue.
+   * Else get the two nodes of the shared edge of the faces. Calculate the squared distance of the vertices (gate width). The path capacity (new value) is the minimum of the current value and the gate width. If this value is larger than the old one of the neighbour, then set it as the new value and push the pair of {new value, neightbour} to the PQ.
+5. For each person, check:
+   - The squared distance to the nearest infected person. If its less than d, then output no.
+   - If sufficient, get the start_face of the person using locate(person). Get the info from the face and check if it is more than 4.0*d.
