@@ -20,8 +20,10 @@ void solve(){
   std::vector<std::pair<int, int>> nobles(n);
   std::vector<std::pair<int, int>> commons(m);
   Program lp (CGAL::SMALLER, false, 0, false, 0); 
+
   long sumxn = 0, sumyn = 0, sumxc = 0, sumyc = 0;
   const int a = 0, b = 1, c = 2;
+  
   for (int i = 0; i < n; i++) {
     int x, y; std::cin >> x >> y;
     nobles[i] = {x, y};

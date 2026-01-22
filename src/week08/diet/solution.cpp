@@ -1,47 +1,56 @@
+#include <iostream>
+#include <vector>
 #include <CGAL/QP_models.h>
 #include <CGAL/QP_functions.h>
-#include <CGAL/Gmpz.h>
+#include <CGAL/Gmpq.h>
 
-typedef int IT;
-typedef CGAL::Gmpz ET;
+typedef long IT;
+typedef CGAL::Gmpq ET;
 typedef CGAL::Quadratic_program<IT> Program;
 typedef CGAL::Quadratic_program_solution<ET> Solution;
 
-int floor_to_int(const CGAL::Quotient<CGAL::Gmpz> &x){
- int a = std::floor(CGAL::to_double(x));
- while (a > x) a -= 1;
- while (a+1 <= x) a += 1;
- return a;
+using namespace std;
+
+int floor_to_int(const auto &x){
+  int a = std::floor(CGAL::to_double(x));
+  while (a > x) a -= 1;
+  while (a+1 <= x) a += 1;
+  return a;
 }
 
-void solve(int n, int m){
-  
-  Program lp(CGAL::SMALLER, true, 0, false, 0);
-  for (int i = 0; i < n; i++){
-    int imin, imax; std::cin >> imin >> imax;
-    lp.set_b(i, imax); lp.set_b(i + n, -imin);
-  }
-  for (int j = 0; j < m; j++){
-    int price; std::cin >> price;
-    for (int i = 0; i < n; i++){
-      int val; std::cin >> val;
-      lp.set_a(j, i, val);
-      lp.set_a(j, i + n, -val);
+int main() {
+  ios::sync_with_stdio(false);
+  cin.tie(nullptr);
+  while(true){
+    int n,m; cin >> n >> m;
+    if(n == 0 && m == 0) break;
+    
+    Program lp (CGAL::SMALLER, true, 0, false, 0); 
+    
+    for(int i = 0; i < n; i++) {
+      long min,max; cin >> min >> max;
+      lp.set_b(i, -min); // at least min amount of nutrient n_i
+      lp.set_b(i+n, max); // at most max amount of nutrient n
     }
-    lp.set_c(j, price);
+    // every row is one nutrient
+    // minimize price
+    for(int j = 0; j < m; j++){
+      long cost; cin >> cost;
+      for(int i = 0; i < n; i++){
+        long amount; cin >> amount;
+        lp.set_a(j, i, -amount);
+        lp.set_a(j, i+n,  amount);
+      }
+       lp.set_c(j, cost);
+    }
+    
+    Solution s = CGAL::solve_linear_program(lp, ET());
+    if(s.is_infeasible()) cout << "No such diet." << endl;
+    else if(s.is_unbounded()) cout << "No such diet." << endl;
+    else { 
+      auto val = s.objective_value();
+      cout << floor_to_int(val) << endl;
+    }
   }
-  Solution s = CGAL::solve_linear_program(lp, ET());
-  if (s.is_unbounded()) std::cout << "unbounded" << std::endl;
-  else if (s.is_infeasible()) std::cout << "No such diet." << std::endl;
-  else std::cout << floor_to_int(s.objective_value()) << std::endl;
-}
-
-int main(){
-  std::ios_base::sync_with_stdio(false);
-  int n, m;
-  std::cin >> n >> m;
-  while (n != 0 || m != 0){
-    solve(n, m);
-    std::cin >> n >> m;
-  }
+  return 0;
 }
