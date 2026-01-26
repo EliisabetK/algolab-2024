@@ -19,7 +19,7 @@ int main() {
       for(int j = i; j < n; j++){
         dp[i][i] = coins[i]; // only one coin
         if(j-i == 1){
-          dp[i][j] = max(coins[i], coins[j]); //. two coins, take the max
+          dp[i][j] = max(coins[i], coins[j]); // two coins, take the max
         }
         else{
           int both_left, both_right, me_left_op_right;

@@ -4,7 +4,7 @@ As explained in the biconnected component part, in order to find the bridges we 
 
 Approach:
 1. Read the edges of the graph.
-2. Make a map <edge_desc,int> to keep which edge is in what component. Run bcc with the map to populöate it.
+2. Make a map <edge_desc,int> to keep which edge is in what component. Run bcc with the map to populate it.
 3. Make a vector of counts for each component, initialize with 0.
 4. Go through every pair in the edge map and increase the count of the component the edge is in.
 5. Initialize k with 0 (number of bridges) and make a set of pairs to keep the bridge vertices.

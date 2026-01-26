@@ -1,6 +1,7 @@
 #### Explanation
 Key idea: 1:1 correspondence between points being connected (connected components in EMST) <==> we can move between the disks of the points (for a radius >= 2 * minimal distance betw. them, making s = 4r^2 very convenient, since comparing 2r all squared) 
 Can copy code from the EMST template, and adapt:
+
 - two UF structures, one for given initial radius with s, one for radius needed to get k
 - for first problem (max bones): For each component of tree, store the number of bones reachable (i.e. 4 *distance to closest point <= s)
 This can be done via a simple array, as UF comp. have index <= n
